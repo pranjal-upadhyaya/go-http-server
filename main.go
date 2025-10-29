@@ -17,11 +17,11 @@ func main() {
 
 	mux.Handle("/app/", apiCfg.middlewareMetricsInc(fileServerHandler))
 
-	mux.Handle("GET /healthz", HealthCheck{statusCode: 200, body: "OK"})
+	mux.Handle("GET /api/healthz", HealthCheck{statusCode: 200, body: "OK"})
 
-	mux.Handle("GET /metrics", apiCfg.loadServerHits())
+	mux.Handle("GET /admin/metrics", apiCfg.loadServerHits())
 
-	mux.Handle("POST /reset", apiCfg.resetServerHits())
+	mux.Handle("POST /admin/reset", apiCfg.resetServerHits())
 
 	server := http.Server{}
 
@@ -53,11 +53,19 @@ func (cfg *apiConfig) ServeHTTP(w http.ResponseWriter, r *http.Request) {}
 func (cfg *apiConfig) loadServerHits() http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		w.Header().Set("Content-Type", "text/html")
+
 		w.WriteHeader(200)
 
 		hits := cfg.fileServerHits.Load()
 
-		response := fmt.Sprintf("Hits: %d", hits)
+		response := fmt.Sprintf(`<html>
+			<body>
+				<h1>Welcome, Chirpy Admin</h1>
+				<p>Chirpy has been visited %d times!</p>
+			</body>
+			</html>`, hits)
 
 		body := []byte(response)
 
